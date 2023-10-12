@@ -1,0 +1,202 @@
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Product</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="javascript: void(0);">Nazox</a></li>
+                    <li class="breadcrumb-item active">Product</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-lg-12">
+
+
+        <div class="card">
+            <div class="card-body">
+                <select class="form-control" id="category"> </select>
+                <input type="file" id="images" class="form-control col-md-12 mt-2">
+                <input type="text" id="name" class="form-control col-md-12 mt-2" placeholder="Mahsulot nomi ... ">
+                <input type="text" id="price" class="form-control col-md-12 mt-2" placeholder="Mahsulot narxi ... ">
+                <input type="text" id="description" class="form-control col-md-12 mt-2"
+                    placeholder="Mahsulot haqida ... ">
+
+                <button type="button" onclick="saveData()" class="btn btn-success mt-3">Save product</button>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Basic Example</h4>
+
+                <div class="table-responsive ">
+                    <table class="table mb-0 table-striped table-bordered text-center">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Product image</th>
+                                <th>Product category</th>
+                                <th>Product name</th>
+                                <th>Product price</th>
+                                <th>Product description</th>
+                                <th>Product created</th>
+                                <th>Setting</th>
+                            </tr>
+                        </thead>
+                        <tbody class="setTABLE">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="offcanvas offcanvas-end" style="width: 40%;" tabindex="-1" id="EDIT_OFFCANVAS"
+    aria-labelledby="EDIT_OFFCANVAS">
+    <div class="offcanvas-header">
+        <h5 id="offcanvasRightLabel">Update product</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body GET_DATA">
+
+    </div>
+</div>
+
+
+<script src="/api/axios.min.js"></script>
+<script src="/api/jquery.min.js"></script>
+
+<script>
+
+    axios.get("/category/all").then(async (res) => {
+        const data = res.data; // [ {}, {}, {} ]
+        const appending = $("#category")
+        appending.html("")
+        appending.append(`<option value="">Kategoriyani tanlash</option>`)
+        data.forEach((item) => {
+            appending.append(`<option value="${item._id}">${item.name}</option>`)
+        });
+    })
+    const saveData = () => {
+        const category = document.getElementById("category")
+        const images = document.getElementById("images")
+        const name = document.getElementById("name")
+        const price = document.getElementById("price")
+        const description = document.getElementById("description")
+
+        if (
+            category.value == "" ||
+            images.files[0] == "" ||
+            name.value == "" ||
+            price.value == "" ||
+            description.value == ""
+        ) { alert("Malumotni kiriting") }
+        else {
+
+            const formData = new FormData()
+
+            formData.append("category_ID", category.value)
+            formData.append("name", name.value)
+            formData.append("price", price.value)
+            formData.append("description", description.value)
+            formData.append("images", images.files[0])
+
+            axios.post("/product/create", formData).then((res) => {
+                setALL()
+            })
+        }
+
+    }
+
+
+
+    const setALL = () => {
+        axios.get("/product/all").then(async (res) => {
+            const data = res.data; // [ {} ]
+            const setTABLE = $(".setTABLE")
+            await setTABLE.html("")
+            data.forEach((element, index) => {
+                setTABLE.append(`
+                    <tr>
+                        <th>${index += 1}</th>
+                        <th>
+                            <img style="width: 50px;" src="/productImage/${element.image[0]}" />
+                        </th>
+                        <td>${element.category_ID.name}</td>
+                        <td>${element.name}</td>
+                        <td>${element.price}</td>
+                        <td>${element.description}</td>
+                        <td>${new Date(element.date).toLocaleString()}</td>
+                        <td>
+                            <button  data-bs-toggle="offcanvas" data-bs-target="#EDIT_OFFCANVAS" aria-controls="EDIT_OFFCANVAS" onclick="editData('${element._id}')" type="button" class="btn btn-warning">Edit</button>
+                            <button onclick="deleteData('${element._id}')" type="button" class="btn btn-danger">Delete</button>
+                        </td>
+                    </tr>
+                `)
+            });
+        })
+    }
+    setALL()
+
+
+
+    const editData = (id) => {
+        axios.get(`/product/${id}`).then(async (res) => {
+            const data = res.data;
+            const appendingHTML = $(".GET_DATA")
+            appendingHTML.html("")
+            appendingHTML.append(`
+                <input type="text" id="PRODUCT_NAME" value="${data.name}" class="form-control col-md-12 mt-2">
+                <input type="text" id="PRODUCT_DESCRIPTION" value="${data.description}" class="form-control col-md-12 mt-2">
+                <input type="text" id="PRODUCT_PRICE" value="${data.price}" class="form-control col-md-12 mt-2">
+                <input type="file" id="PRODUCT_IMAGE"  class="form-control col-md-12 mt-2">
+                <button type="button" onclick="update_data('${data._id}')" class="btn btn-success mt-3">Submit</button>
+            `)
+        })
+    }
+    const update_data = (id) => {
+
+        const PRODUCT_NAME = document.getElementById("PRODUCT_NAME")
+        const PRODUCT_DESCRIPTION = document.getElementById("PRODUCT_DESCRIPTION")
+        const PRODUCT_PRICE = document.getElementById("PRODUCT_PRICE")
+        const PRODUCT_IMAGE = document.getElementById("PRODUCT_IMAGE")
+
+        if (
+            PRODUCT_NAME.value == "" ||
+            PRODUCT_DESCRIPTION.value == "" ||
+            PRODUCT_PRICE.value == "" ||
+            PRODUCT_IMAGE.files[0] == ""
+        ) {
+            alert("Ma'lumotni kiriting")
+        }
+        else {
+            const formData = new FormData()
+
+            formData.append("name", PRODUCT_NAME.value)
+            formData.append("price",  PRODUCT_PRICE.value)
+            formData.append("description",  PRODUCT_DESCRIPTION.value)
+            formData.append("images", PRODUCT_IMAGE.files[0] )
+
+            axios.put(`/product/${id}`, formData).then((res) => {
+                setALL()
+            })
+        }
+    }
+
+
+
+    const deleteData = (id) => {
+        axios.delete(`/product/${id}`).then((res) => {
+            setALL()
+        })
+    }
+
+
+</script>

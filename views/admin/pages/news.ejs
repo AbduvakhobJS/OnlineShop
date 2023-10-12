@@ -1,0 +1,187 @@
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">News</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="javascript: void(0);">Nazox</a></li>
+                    <li class="breadcrumb-item active">News</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-lg-12">
+
+
+        <div class="card">
+            <div class="card-body">
+               
+                <input type="file" id="images" class="form-control col-md-12 mt-2">
+                <input type="text" id="title" class="form-control col-md-12 mt-2" placeholder="Mahsulot nomi ... ">
+                <input type="text" id="sitata" class="form-control col-md-12 mt-2" placeholder="Mahsulot sitatasi ... ">
+                <input type="text" id="description" class="form-control col-md-12 mt-2"
+                    placeholder="Mahsulot haqida ... ">
+
+                <button type="button" onclick="saveData()" class="btn btn-success mt-3">Save News</button>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Basic Example</h4>
+
+                <div class="table-responsive ">
+                    <table class="table mb-0 table-striped table-bordered text-center">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>News image</th>
+                                <th>News title</th>
+                                <th>News sitata</th>
+                                <th>News description</th>
+                                <th>Product created</th>
+                                <th>Setting</th>
+                            </tr>
+                        </thead>
+                        <tbody class="setTABLE">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="offcanvas offcanvas-end" style="width: 40%;" tabindex="-1" id="EDIT_OFFCANVAS"
+    aria-labelledby="EDIT_OFFCANVAS">
+    <div class="offcanvas-header">
+        <h5 id="offcanvasRightLabel">Update product</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body GET_DATA">
+
+    </div>
+</div>
+
+
+<script src="/api/axios.min.js"></script>
+<script src="/api/jquery.min.js"></script>
+
+<script>
+     const saveData = () => {
+        const images = document.getElementById("images")
+        const title = document.getElementById("title")
+        const sitata = document.getElementById("sitata")
+        const description = document.getElementById("description")
+
+        if (
+            images.files[0] == "" ||
+            title.value == "" ||
+            sitata.value == "" ||
+            description.value == ""
+        ) { alert("Malumotni kiriting") }
+        else {
+
+            const formData = new FormData()
+
+            formData.append("title", title.value)
+            formData.append("sitata", sitata.value)
+            formData.append("description", description.value)
+            formData.append("images", images.files[0])
+
+            axios.post("/news/create", formData).then((res) => {
+                setALL()
+            })
+        }
+
+    }
+
+    const setALL = () => {
+        axios.get("/news/all").then(async (res) => {
+            const data = res.data; // [ {} ]
+            const setTABLE = $(".setTABLE")
+            await setTABLE.html("")
+            data.forEach((element, index) => {
+                setTABLE.append(`
+                    <tr>
+                        <th>${index += 1}</th>
+                        <th>
+                            <img style="width: 50px;" src="/newsImage/${element.image[0]}"/>
+                        </th>
+                        <td>${element.title}</td>
+                        <td>${element.sitata}</td>
+                        <td>${element.description}</td>
+                        <td>${new Date(element.date).toLocaleString()}</td>
+                        <td>
+                            <button  data-bs-toggle="offcanvas" data-bs-target="#EDIT_OFFCANVAS" aria-controls="EDIT_OFFCANVAS" onclick="editData('${element._id}')" type="button" class="btn btn-warning">Edit</button>
+                            <button onclick="deleteData('${element._id}')" type="button" class="btn btn-danger">Delete</button>
+                        </td>
+                    </tr>
+                `)
+            });
+        })
+    }
+    setALL()
+
+
+
+
+    const editData = (id) => {
+        axios.get(`/news/${id}`).then(async (res) => {
+            const data = res.data;
+            const appendingHTML = $(".GET_DATA")
+            appendingHTML.html("")
+            appendingHTML.append(`
+                <input type="text" id="NEWS_TITLE" value="${data.title}" class="form-control col-md-12 mt-2">
+                <input type="text" id="NEWS_DESCRIPTION" value="${data.description}" class="form-control col-md-12 mt-2">
+                <input type="text" id="NEWS_SITATA" value="${data.sitata}" class="form-control col-md-12 mt-2">
+                <input type="file" id="NEWS_IMAGE"  class="form-control col-md-12 mt-2">
+                <button type="button" onclick="update_data('${data._id}')" class="btn btn-success mt-3">Submit</button>
+            `)
+        })
+    }
+    const update_data = (id) => {
+
+        const NEWS_TITLE = document.getElementById("NEWS_TITLE")
+        const NEWS_DESCRIPTION = document.getElementById("NEWS_DESCRIPTION")
+        const NEWS_SITATA = document.getElementById("NEWS_SITATA")
+        const NEWS_IMAGE = document.getElementById("NEWS_IMAGE")
+
+        if (
+            NEWS_TITLE.value == "" ||
+            NEWS_DESCRIPTION.value == "" ||
+            NEWS_SITATA.value == "" ||
+            NEWS_IMAGE.files[0] == ""
+        ) {
+            alert("Ma'lumotni kiriting")
+        }
+        else {
+            const formData = new FormData()
+
+            formData.append("title", NEWS_TITLE.value)
+            formData.append("sitata",  NEWS_SITATA.value)
+            formData.append("description",  NEWS_DESCRIPTION.value)
+            formData.append("images", NEWS_IMAGE.files[0] )
+
+            axios.put(`/news/${id}`, formData).then((res) => {
+                setALL()
+            })
+        }
+    }
+
+
+
+
+
+    const deleteData = (id) => {
+        axios.delete(`/news/${id}`).then((res) => {
+            setALL()
+        })
+    }
+
+</script>

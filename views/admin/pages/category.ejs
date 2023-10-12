@@ -1,0 +1,143 @@
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Category</h4>
+
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="javascript: void(0);">Nazox</a></li>
+                    <li class="breadcrumb-item active">Category</li>
+                </ol>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-lg-12">
+
+
+        <div class="card">
+            <div class="card-body">
+                <input type="text" id="CATEGORY" class="form-control col-md-12">
+                <button type="button" onclick="saveData()" class="btn btn-success mt-3">Submit</button>
+            </div>
+        </div>
+
+
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Basic Example</h4>
+
+                <div class="table-responsive ">
+                    <table class="table mb-0 table-striped table-bordered text-center">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Date</th>
+                                <th>Setting</th>
+                            </tr>
+                        </thead>
+                        <tbody class="setTABLE">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="offcanvas offcanvas-end" style="width: 40%;" tabindex="-1" id="EDIT_OFFCANVAS"
+    aria-labelledby="EDIT_OFFCANVAS">
+    <div class="offcanvas-header">
+        <h5 id="offcanvasRightLabel">Edit category</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body GET_DATA">
+
+    </div>
+</div>
+
+
+<script src="/api/axios.min.js"></script>
+<script src="/api/jquery.min.js"></script>
+<script>
+
+    const saveData = () => {
+        const CATEGORY = document.getElementById("CATEGORY").value;
+        if (CATEGORY == "") {
+            alert("Malumotni kiriting")
+        }
+        else {
+            axios.post("/category/create", {
+                name: CATEGORY
+            }).then((res) => {
+                setALL()
+            })
+        }
+
+    }
+    const setALL = () => {
+        axios.get("/category/all").then(async (res) => {
+            const data = res.data; // [ {} ]
+            const setTABLE = $(".setTABLE")
+            await setTABLE.html("")
+            data.forEach((element, index) => {
+                setTABLE.append(`
+                    <tr>
+                        <th>${index += 1}</th>
+                        <td>${element.name}</td>
+                        <td>${new Date(element.date).toLocaleString()}</td>
+                        <td>
+                            <button  data-bs-toggle="offcanvas" data-bs-target="#EDIT_OFFCANVAS" aria-controls="EDIT_OFFCANVAS" onclick="editData('${element._id}')" type="button" class="btn btn-warning">Edit</button>
+                            <button onclick="deleteData('${element._id}')" type="button" class="btn btn-danger">Delete</button>
+                        </td>
+                    </tr>
+                `)
+            });
+        })
+    }
+    setALL()
+    const deleteData = (id) => {
+        axios.delete(`/category/${id}`).then((res) => {
+            setALL()
+        })
+    }
+
+
+
+    const editData = (id) => {
+        axios.get(`/category/${id}`).then(async (res) => {
+            const data = res.data;
+            const appendingHTML = $(".GET_DATA")
+            appendingHTML.html("")
+            appendingHTML.append(`
+                <input type="text" id="CATEGORY_UPDATE" value="${data.name}" class="form-control col-md-12">
+                <button type="button" onclick="update_data('${data._id}')" class="btn btn-success mt-3">Submit</button>
+            `)
+        })
+    }
+
+
+    
+
+    const update_data = (id) => {
+        const name = document.getElementById("CATEGORY_UPDATE")
+        if (name.value == "") alert("Iltimos ma'lumotlarni kiriting")
+        else {
+            axios.put(`/category/${id}`, {
+                name: name.value
+            })
+                .then(async (res) => {
+                    setALL()
+                })
+        }
+    }
+
+
+</script>
